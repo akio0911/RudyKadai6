@@ -5,21 +5,28 @@
 
 import SwiftUI
 
+private struct AlertIdentifier: Identifiable {
+    enum Choice {
+        case collect
+        case incollect
+    }
+
+    // swiftlint:disable:next identifier_name
+    var id: Choice
+}
+
 struct ContentView: View {
     private static let range = 1...100
 
     @State private var randomInt = Int.random(in: Self.range)
     @State private var sliderValue: Double = 50
-    @State private var whitchAlert: AlertType = AlertType.incollect
+    @State private var alertIdentifier: AlertIdentifier?
     @State var onAlert: Bool = false
 
-    enum AlertType {
-        case collect
-        case incollect
-    }
-
     private func checkAnsewr() {
-        whitchAlert = randomInt == Int(sliderValue) ? .collect : .incollect
+        alertIdentifier = AlertIdentifier(
+            id: randomInt == Int(sliderValue) ? .collect : .incollect
+        )
     }
 
     private func restart() {
@@ -44,20 +51,22 @@ struct ContentView: View {
                 onAlert = true
             }, label: {
                 Text("判定！")
-            }).alert(isPresented: $onAlert) {
+            })
+            .alert(item: $alertIdentifier, content: { alert in
                 let resultText: String
-                switch whitchAlert {
+                switch alert.id {
                 case .collect:
                     resultText = "あたり！"
                 case .incollect:
                     resultText = "はずれ！"
                 }
                 let alertMessage = "\(resultText)\nあなたの値：\(Int(sliderValue))"
+
                 return Alert(title: Text("結果"),
                              message: Text(alertMessage),
                              dismissButton: .default(Text("再挑戦"),
                                                      action: { restart() }))
-            }
+            })
         }.padding()
         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .top)
     }
